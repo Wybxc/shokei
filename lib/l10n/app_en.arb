@@ -8,6 +8,10 @@
   "@tipFromEma": {
     "description": "Hint message from Ema character"
   },
+  "snackbarActionLabel": "OK",
+  "@snackbarActionLabel": {
+    "description": "Label for the snackbar action button"
+  },
   "aboutTitle": "About",
   "@aboutTitle": {
     "description": "Title of the about section"

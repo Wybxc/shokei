@@ -2,6 +2,7 @@
   "@@locale": "zh",
   "appName": "処刑",
   "tipFromEma": "来自艾玛的提示：\n双击按钮可重置状态",
+  "snackbarActionLabel": "确定",
   "aboutTitle": "About",
   "versionLabel": "Version:",
   "aboutDescriptionJa": "本アプリは、Re,AER 傘下のブランド Acacia によって制作された推理文字アドベンチャーゲーム「魔法少女ノ魔女裁判」の二次創作作品です。",

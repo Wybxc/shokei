@@ -22,7 +22,7 @@ class ShosuApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF4B0029),
-          brightness: Brightness.dark,
+          brightness: Brightness.light,
         ),
         useMaterial3: true,
       ),

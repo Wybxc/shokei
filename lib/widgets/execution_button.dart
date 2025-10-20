@@ -22,27 +22,11 @@ class ExecutionButton extends HookWidget {
   Widget build(BuildContext context) {
     final filled = useState(false);
     final isHolding = useRef(false);
+    final progress = useState(0.0);
+    final scale = useState(1.0);
 
     final progressController = useAnimationController(
       duration: const Duration(milliseconds: 5500),
-    );
-
-    final scaleController = useAnimationController(
-      duration: const Duration(milliseconds: 150),
-    );
-
-    final progressAnimation = useMemoized(
-      () => Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: progressController, curve: Curves.linear),
-      ),
-      [progressController],
-    );
-
-    final scaleAnimation = useMemoized(
-      () => Tween<double>(begin: 1.0, end: 0.94).animate(
-        CurvedAnimation(parent: scaleController, curve: Curves.easeInOut),
-      ),
-      [scaleController],
     );
 
     final holdPlayer = useMemoized(() => AudioPlayer());
@@ -55,6 +39,16 @@ class ExecutionButton extends HookWidget {
         finishPlayer.dispose();
       };
     }, []);
+
+    // Listen to progress animation changes
+    useEffect(() {
+      void listener() {
+        progress.value = progressController.value;
+      }
+
+      progressController.addListener(listener);
+      return () => progressController.removeListener(listener);
+    }, [progressController]);
 
     // Generic audio playback method with unified error handling
     Future<void> playAudio(AudioPlayer player, String assetPath,
@@ -133,7 +127,7 @@ class ExecutionButton extends HookWidget {
 
       onPressStart();
       isHolding.value = true;
-      scaleController.forward();
+      scale.value = 0.94;
       startVibration();
       playAudio(holdPlayer, 'audio/processing.wav',
           releaseMode: ReleaseMode.loop);
@@ -143,7 +137,7 @@ class ExecutionButton extends HookWidget {
     void onPanStop() {
       onPressEnd();
       isHolding.value = false;
-      scaleController.reverse();
+      scale.value = 1.0;
 
       if (!filled.value) {
         stopFeedback();
@@ -173,46 +167,48 @@ class ExecutionButton extends HookWidget {
       onPanEnd: (details) => onPanStop(),
       onPanCancel: () => onPanStop(),
       onDoubleTap: onDoubleTap,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([scaleAnimation, progressAnimation]),
-        builder: (context, child) {
-          return Transform.scale(
-            scale: scaleAnimation.value,
-            child: SizedBox(
-              width: size,
-              height: size,
-              child: CustomPaint(
-                painter: _ShadowPainter(scale: scaleAnimation.value),
-                child: Stack(
-                  children: [
-                    // Background image
-                    _buildButtonImage('assets/images/button_bg.png'),
+      child: AnimatedScale(
+        scale: scale.value,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: CustomPaint(
+            painter: _ShadowPainter(scale: scale.value),
+            child: Stack(
+              children: [
+                // Background image
+                _buildButtonImage('assets/images/button_bg.png'),
 
-                    // Fill animation
-                    ClipOval(
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: FractionallySizedBox(
-                          heightFactor: progressAnimation.value,
-                          child: Container(
-                            color: const Color(0xFF953949),
-                          ),
-                        ),
+                // Fill animation
+                ClipOval(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: AnimatedFractionallySizedBox(
+                      heightFactor: progress.value,
+                      duration: Duration
+                          .zero, // No additional animation, follows controller
+                      child: Container(
+                        color: const Color(0xFF953949),
                       ),
                     ),
-
-                    // Button foreground
-                    _buildButtonImage('assets/images/button.png'),
-
-                    // Finish overlay
-                    if (filled.value)
-                      _buildButtonImage('assets/images/finish.png'),
-                  ],
+                  ),
                 ),
-              ),
+
+                // Button foreground
+                _buildButtonImage('assets/images/button.png'),
+
+                // Finish overlay with fade-in animation
+                AnimatedOpacity(
+                  opacity: filled.value ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: _buildButtonImage('assets/images/finish.png'),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
@@ -224,6 +220,28 @@ class ExecutionButton extends HookWidget {
         assetPath,
         fit: BoxFit.cover,
       ),
+    );
+  }
+}
+
+// Custom widget for animated fractionally sized box
+class AnimatedFractionallySizedBox extends StatelessWidget {
+  final double heightFactor;
+  final Duration duration;
+  final Widget child;
+
+  const AnimatedFractionallySizedBox({
+    super.key,
+    required this.heightFactor,
+    required this.duration,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      heightFactor: heightFactor,
+      child: child,
     );
   }
 }
