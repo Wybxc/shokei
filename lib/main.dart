@@ -28,7 +28,18 @@ class ShosuApp extends StatelessWidget {
       ),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const HomeScreen(),
+      home: Builder(builder: (context) {
+        final theme = Theme.of(context);
+        return Theme(
+          data: theme.copyWith(
+            bottomSheetTheme: theme.bottomSheetTheme.copyWith(
+              backgroundColor: theme.colorScheme.primary,
+              dragHandleColor: theme.colorScheme.primaryContainer,
+            ),
+          ),
+          child: const HomeScreen(),
+        );
+      }),
       debugShowCheckedModeBanner: false,
     );
   }

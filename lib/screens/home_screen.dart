@@ -46,8 +46,9 @@ class HomeScreen extends HookWidget {
     void showAboutBottomSheet() {
       showModalBottomSheet(
         context: context,
-        backgroundColor: Colors.transparent,
         isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
         builder: (context) => _buildBottomSheet(context),
       );
     }
@@ -106,110 +107,67 @@ class HomeScreen extends HookWidget {
   Widget _buildBottomSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF4B0029),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Drag handle
-              Container(
-                width: 32,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+    const whiteText = TextStyle(color: Colors.white);
+    const whiteTextBold =
+        TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
 
-              // Logo
-              Image.asset('assets/images/logo.png', height: 100),
-              const SizedBox(height: 16),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Logo
+          Image.asset('assets/images/logo.png', height: 100),
+          const SizedBox(height: 16),
 
-              // Title
-              Text(
-                l10n.aboutTitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Description
-              Text(
-                '${l10n.aboutDescriptionZh}\n\n${l10n.aboutDescriptionJa}',
-                style: const TextStyle(
-                  fontSize: 10,
-                  height: 1.6,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              // Divider
-              const Divider(
-                color: Colors.white30,
-                height: 32,
-              ),
-
-              // App info
-              Text(
-                '${l10n.appName}\n${l10n.versionLabel} 1.2.0\n${l10n.developerInfo}',
-                style: const TextStyle(
-                  fontSize: 9,
-                  height: 1.5,
-                  color: Colors.white70,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-
-              // Social links
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.white30,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: l10n.xLabel,
-                      style: const TextStyle(
-                        color: Color(0xFFFF45AB),
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                      ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap =
-                            () => launchUrl(Uri.parse('https://x.com/wybxc')),
-                    ),
-                    const TextSpan(text: '  ｜  '),
-                    TextSpan(
-                        text: l10n.bilibiliLabel,
-                        style: const TextStyle(
-                          color: Color(0xFFFF45AB),
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () => launchUrl(
-                                Uri.parse(
-                                    'https://space.bilibili.com/327507343'),
-                              )),
-                  ],
-                ),
-              ),
-            ],
+          // Title
+          Text(
+            l10n.aboutTitle,
+            style: whiteTextBold.copyWith(fontSize: 12),
           ),
-        ),
+          const SizedBox(height: 16),
+
+          // Description
+          Text(
+            '${l10n.aboutDescriptionZh}\n\n${l10n.aboutDescriptionJa}',
+            style: whiteText.copyWith(fontSize: 10, height: 1.6),
+            textAlign: TextAlign.center,
+          ),
+
+          // Divider
+          const Divider(color: Colors.white30, height: 32),
+
+          // App info
+          Text(
+            '${l10n.appName}\n${l10n.versionLabel} 1.2.0\n${l10n.developerInfo}',
+            style: whiteText.copyWith(
+                fontSize: 9, height: 1.5, color: Colors.white70),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+
+          // Social links
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(fontSize: 10, color: Colors.white30),
+              children: [
+                TextSpan(
+                  text: l10n.xLabel,
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => launchUrl(Uri.parse('https://x.com/wybxc')),
+                ),
+                const TextSpan(text: '  ｜  '),
+                TextSpan(
+                  text: l10n.bilibiliLabel,
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => launchUrl(
+                          Uri.parse('https://space.bilibili.com/327507343'),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
