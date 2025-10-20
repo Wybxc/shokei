@@ -9,11 +9,11 @@ void main() {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(const ShosuApp());
+  runApp(const ShokeiApp());
 }
 
-class ShosuApp extends StatelessWidget {
-  const ShosuApp({super.key});
+class ShokeiApp extends StatelessWidget {
+  const ShokeiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
