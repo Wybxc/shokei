@@ -129,10 +129,18 @@ class HomeScreen extends HookWidget {
 
           // Description
           Text(
-            '${l10n.aboutDescriptionZh}\n\n${l10n.aboutDescriptionJa}',
+            l10n.aboutDescription,
             style: whiteText.copyWith(fontSize: 10, height: 1.6),
             textAlign: TextAlign.center,
           ),
+          if (l10n.aboutDescription != l10n.aboutDescriptionJa)
+            const SizedBox(height: 16),
+          if (l10n.aboutDescription != l10n.aboutDescriptionJa)
+            Text(
+              l10n.aboutDescriptionJa,
+              style: whiteText.copyWith(fontSize: 10, height: 1.6),
+              textAlign: TextAlign.center,
+            ),
 
           // Divider
           const Divider(color: Colors.white30, height: 32),
@@ -152,16 +160,17 @@ class HomeScreen extends HookWidget {
               style: const TextStyle(fontSize: 10, color: Colors.white30),
               children: [
                 TextSpan(
-                  text: l10n.xLabel,
+                  text: l10n.githubLabel,
                   recognizer: TapGestureRecognizer()
-                    ..onTap = () => launchUrl(Uri.parse('https://x.com/wybxc')),
+                    ..onTap =
+                        () => launchUrl(Uri.parse('https://github.com/Wybxc')),
                 ),
                 const TextSpan(text: '  ｜  '),
                 TextSpan(
                   text: l10n.bilibiliLabel,
                   recognizer: TapGestureRecognizer()
                     ..onTap = () => launchUrl(
-                          Uri.parse('https://space.bilibili.com/327507343'),
+                          Uri.parse('https://space.bilibili.com/85438718'),
                         ),
                 ),
               ],

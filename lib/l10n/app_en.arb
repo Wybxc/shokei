@@ -4,7 +4,7 @@
   "@appName": {
     "description": "The application name"
   },
-  "tipFromEma": "Hint from Ema:\nDouble tap the button to reset the state",
+  "tipFromEma": "Hint from Ema: Double tap the button to reset the state",
   "@tipFromEma": {
     "description": "Hint message from Ema character"
   },
@@ -24,19 +24,19 @@
   "@aboutDescriptionJa": {
     "description": "Japanese description in about section"
   },
-  "aboutDescriptionZh": "本应用程序是由 Re,AER 旗下品牌 Acacia 制作的推理文字冒险游戏《魔法少女的魔女审判》（魔法少女ノ魔女裁判）的二创作品。",
-  "@aboutDescriptionZh": {
+  "aboutDescription": "This app is a derivative work of the reasoning text adventure game \"Mahou Shoujo no Majo Saiban\" (魔法少女ノ魔女裁判) created by Acacia, a brand under Re,AER.",
+  "@aboutDescription": {
     "description": "Chinese description in about section"
   },
-  "developerInfo": "Software Developed by GBXIN",
+  "developerInfo": "Developed by Wybxc",
   "@developerInfo": {
     "description": "Developer information"
   },
-  "xLabel": "X (旧 Twitter)",
-  "@xLabel": {
-    "description": "X (formerly Twitter) link label"
+  "githubLabel": "GitHub",
+  "@githubLabel": {
+    "description": "GitHub link label"
   },
-  "bilibiliLabel": "bilibili",
+  "bilibiliLabel": "Bilibili",
   "@bilibiliLabel": {
     "description": "Bilibili link label"
   }
