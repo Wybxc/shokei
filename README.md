@@ -1,16 +1,9 @@
-# shokei
+# shokei (処刑)
 
-A new Flutter project.
+推理文字冒险游戏《魔法少女ノ魔女裁判》的二次创作的移动应用。
 
-## Getting Started
+参考自：https://github.com/PolarisSdesu/shosu
 
-This project is a starting point for a Flutter application.
+## License
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+MIT License.
