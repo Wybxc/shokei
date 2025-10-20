@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/execution_button.dart';
 
 class HomeScreen extends HookWidget {
@@ -134,7 +135,7 @@ class HomeScreen extends HookWidget {
             textAlign: TextAlign.center,
           ),
           if (l10n.aboutDescription != l10n.aboutDescriptionJa)
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
           if (l10n.aboutDescription != l10n.aboutDescriptionJa)
             Text(
               l10n.aboutDescriptionJa,
@@ -146,11 +147,17 @@ class HomeScreen extends HookWidget {
           const Divider(color: Colors.white30, height: 32),
 
           // App info
-          Text(
-            '${l10n.appName}\n${l10n.versionLabel} 1.2.0\n${l10n.developerInfo}',
-            style: whiteText.copyWith(
-                fontSize: 9, height: 1.5, color: Colors.white70),
-            textAlign: TextAlign.center,
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.hasData ? snapshot.data!.version : '...';
+              return Text(
+                '${l10n.appName}\n${l10n.versionLabel} $version\n${l10n.developerInfo}',
+                style: whiteText.copyWith(
+                    fontSize: 9, height: 1.5, color: Colors.white70),
+                textAlign: TextAlign.center,
+              );
+            },
           ),
           const SizedBox(height: 16),
 
