@@ -1,0 +1,39 @@
+{
+  "@@locale": "en",
+  "appName": "処刑",
+  "@appName": {
+    "description": "The application name"
+  },
+  "tipFromEma": "Hint from Ema:\nDouble tap the button to reset the state",
+  "@tipFromEma": {
+    "description": "Hint message from Ema character"
+  },
+  "aboutTitle": "About",
+  "@aboutTitle": {
+    "description": "Title of the about section"
+  },
+  "versionLabel": "Version:",
+  "@versionLabel": {
+    "description": "Label for version number"
+  },
+  "aboutDescriptionJa": "本アプリは、Re,AER 傘下のブランド Acacia によって制作された推理文字アドベンチャーゲーム「魔法少女ノ魔女裁判」の二次創作作品です。",
+  "@aboutDescriptionJa": {
+    "description": "Japanese description in about section"
+  },
+  "aboutDescriptionZh": "本应用程序是由 Re,AER 旗下品牌 Acacia 制作的推理文字冒险游戏《魔法少女的魔女审判》（魔法少女ノ魔女裁判）的二创作品。",
+  "@aboutDescriptionZh": {
+    "description": "Chinese description in about section"
+  },
+  "developerInfo": "Software Developed by GBXIN",
+  "@developerInfo": {
+    "description": "Developer information"
+  },
+  "xLabel": "X (旧 Twitter)",
+  "@xLabel": {
+    "description": "X (formerly Twitter) link label"
+  },
+  "bilibiliLabel": "bilibili",
+  "@bilibiliLabel": {
+    "description": "Bilibili link label"
+  }
+}
