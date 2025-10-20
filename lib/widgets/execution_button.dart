@@ -36,10 +36,16 @@ class _ExecutionButtonState extends State<ExecutionButton>
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+  }
+
+  // Initialize animation controllers
+  void _initializeAnimations() {
     _progressController = AnimationController(
       duration: const Duration(milliseconds: 5500),
       vsync: this,
-    );
+    )..addStatusListener(_onProgressStatusChanged);
+
     _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _progressController, curve: Curves.linear),
     );
@@ -48,19 +54,21 @@ class _ExecutionButtonState extends State<ExecutionButton>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
+
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
+  }
 
-    _progressController.addStatusListener((status) {
-      debugPrint('Progress animation status: $status');
-      debugPrint(
-          'Current progress value: ${_progressController.value}, isHolding: $_isHolding');
-      if (status == AnimationStatus.completed &&
-          _progressController.value >= 1.0) {
-        _onFillComplete();
-      }
-    });
+  // Progress animation status listener
+  void _onProgressStatusChanged(AnimationStatus status) {
+    debugPrint('Progress animation status: $status');
+    debugPrint(
+        'Current progress value: ${_progressController.value}, isHolding: $_isHolding');
+    if (status == AnimationStatus.completed &&
+        _progressController.value >= 1.0) {
+      _onFillComplete();
+    }
   }
 
   @override
@@ -74,41 +82,38 @@ class _ExecutionButtonState extends State<ExecutionButton>
 
   Future<void> _onFillComplete() async {
     setState(() => _filled = true);
-    await _stopHoldSound();
-    await _stopVibration();
-    await _playFinishSound();
+    await _stopFeedback();
+    await _playAudio(_finishPlayer, 'audio/finished.wav');
     widget.onFinished?.call();
   }
 
-  Future<void> _playHoldSound() async {
+  // Generic audio playback method with unified error handling
+  Future<void> _playAudio(AudioPlayer player, String assetPath,
+      {ReleaseMode? releaseMode}) async {
     try {
-      await _holdPlayer.setReleaseMode(ReleaseMode.loop);
-      await _holdPlayer.play(AssetSource('audio/processing.wav'));
+      if (releaseMode != null) {
+        await player.setReleaseMode(releaseMode);
+      }
+      await player.play(AssetSource(assetPath));
     } catch (e) {
-      debugPrint('Error playing hold sound: $e');
+      debugPrint('Error playing audio ($assetPath): $e');
     }
   }
 
-  Future<void> _stopHoldSound() async {
+  // Generic audio stop method
+  Future<void> _stopAudio(AudioPlayer player) async {
     try {
-      await _holdPlayer.stop();
+      await player.stop();
     } catch (e) {
-      debugPrint('Error stopping hold sound: $e');
+      debugPrint('Error stopping audio: $e');
     }
   }
 
-  Future<void> _playFinishSound() async {
-    try {
-      await _finishPlayer.play(AssetSource('audio/finished.wav'));
-    } catch (e) {
-      debugPrint('Error playing finish sound: $e');
-    }
-  }
-
+  // Start vibration feedback
   Future<void> _startVibration() async {
     try {
       final hasVibrator = await Vibration.hasVibrator();
-      if (hasVibrator) {
+      if (hasVibrator == true) {
         // Vibrate with pattern: wait 0ms, vibrate 100ms, repeat
         await Vibration.vibrate(pattern: [0, 100], repeat: 0);
       }
@@ -117,12 +122,21 @@ class _ExecutionButtonState extends State<ExecutionButton>
     }
   }
 
+  // Stop vibration feedback
   Future<void> _stopVibration() async {
     try {
       await Vibration.cancel();
     } catch (e) {
       debugPrint('Error stopping vibration: $e');
     }
+  }
+
+  // Stop all feedback effects (audio + vibration)
+  Future<void> _stopFeedback() async {
+    await Future.wait([
+      _stopAudio(_holdPlayer),
+      _stopVibration(),
+    ]);
   }
 
   void _onPanStart() {
@@ -132,7 +146,8 @@ class _ExecutionButtonState extends State<ExecutionButton>
     _isHolding = true;
     _scaleController.forward();
     _startVibration();
-    _playHoldSound();
+    _playAudio(_holdPlayer, 'audio/processing.wav',
+        releaseMode: ReleaseMode.loop);
     _progressController.forward();
   }
 
@@ -142,25 +157,27 @@ class _ExecutionButtonState extends State<ExecutionButton>
     _scaleController.reverse();
 
     if (!_filled) {
-      _stopHoldSound();
-      _stopVibration();
-
-      final currentProgress = _progressController.value;
-      _progressController.stop();
-      _progressController.animateTo(
-        0.0,
-        duration: Duration(milliseconds: (currentProgress * 1000).toInt()),
-        curve: Curves.linear,
-      );
+      _stopFeedback();
+      _resetProgress();
     }
+  }
+
+  // Reset progress animation
+  void _resetProgress() {
+    final currentProgress = _progressController.value;
+    _progressController.stop();
+    _progressController.animateTo(
+      0.0,
+      duration: Duration(milliseconds: (currentProgress * 1000).toInt()),
+      curve: Curves.linear,
+    );
   }
 
   void _onDoubleTap() {
     if (_filled) {
       _progressController.stop();
       _progressController.reset();
-      _stopHoldSound();
-      _stopVibration();
+      _stopFeedback();
       widget.onPressEnd();
       setState(() => _filled = false);
     }
@@ -186,48 +203,47 @@ class _ExecutionButtonState extends State<ExecutionButton>
                 child: Stack(
                   children: [
                     // Background image
-                    ClipOval(
-                      child: Image.asset(
-                        'assets/images/button_bg.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    _buildButtonImage('assets/images/button_bg.png'),
 
                     // Fill animation
-                    ClipOval(
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: FractionallySizedBox(
-                          heightFactor: _progressAnimation.value,
-                          child: Container(
-                            color: const Color(0xFF953949),
-                          ),
-                        ),
-                      ),
-                    ),
+                    _buildFillAnimation(),
 
                     // Button foreground
-                    ClipOval(
-                      child: Image.asset(
-                        'assets/images/button.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    _buildButtonImage('assets/images/button.png'),
 
                     // Finish overlay
-                    if (_filled)
-                      ClipOval(
-                        child: Image.asset(
-                          'assets/images/finish.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                    if (_filled) _buildButtonImage('assets/images/finish.png'),
                   ],
                 ),
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  // Build button image layer
+  Widget _buildButtonImage(String assetPath) {
+    return ClipOval(
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  // Build fill animation
+  Widget _buildFillAnimation() {
+    return ClipOval(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: FractionallySizedBox(
+          heightFactor: _progressAnimation.value,
+          child: Container(
+            color: const Color(0xFF953949),
+          ),
+        ),
       ),
     );
   }
