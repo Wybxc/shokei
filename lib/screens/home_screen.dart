@@ -1,45 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../widgets/execution_button.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends HookWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
-  bool _showBottomSheet = false;
-  late AnimationController _aboutAlphaController;
-  late Animation<double> _aboutAlphaAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _aboutAlphaController = AnimationController(
+  Widget build(BuildContext context) {
+    final showBottomSheet = useState(false);
+    final aboutAlphaController = useAnimationController(
       duration: const Duration(milliseconds: 200),
-      vsync: this,
     );
-    _aboutAlphaAnimation =
-        Tween<double>(begin: 1.0, end: 1.0).animate(_aboutAlphaController);
-    _checkAndShowTip();
-  }
+    final aboutAlphaAnimation = useMemoized(
+      () => Tween<double>(begin: 1.0, end: 1.0).animate(aboutAlphaController),
+      [aboutAlphaController],
+    );
 
-  @override
-  void dispose() {
-    _aboutAlphaController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _checkAndShowTip() async {
-    final prefs = await SharedPreferences.getInstance();
-    final shown = prefs.getBool('tip_shown') ?? false;
-    if (!shown && mounted) {
-      await prefs.setBool('tip_shown', true);
-      if (mounted) {
+    // Show tip on mount
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         final l10n = AppLocalizations.of(context);
         if (l10n != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -50,22 +30,20 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           );
         }
-      }
+      });
+      return null;
+    }, []);
+
+    void onPressStart() {
+      aboutAlphaController.animateTo(0.0,
+          duration: const Duration(milliseconds: 100));
     }
-  }
 
-  void _onPressStart() {
-    _aboutAlphaController.animateTo(0.0,
-        duration: const Duration(milliseconds: 100));
-  }
+    void onPressEnd() {
+      aboutAlphaController.animateTo(1.0,
+          duration: const Duration(milliseconds: 200));
+    }
 
-  void _onPressEnd() {
-    _aboutAlphaController.animateTo(1.0,
-        duration: const Duration(milliseconds: 200));
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
@@ -82,14 +60,14 @@ class _HomeScreenState extends State<HomeScreen>
             top: MediaQuery.of(context).padding.top + 20,
             left: 20,
             child: AnimatedBuilder(
-              animation: _aboutAlphaAnimation,
+              animation: aboutAlphaAnimation,
               builder: (context, child) {
                 return Opacity(
-                  opacity: _aboutAlphaAnimation.value,
+                  opacity: aboutAlphaAnimation.value,
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => setState(() => _showBottomSheet = true),
+                      onTap: () => showBottomSheet.value = true,
                       customBorder: const CircleBorder(),
                       child: Container(
                         padding: const EdgeInsets.all(8),
@@ -110,20 +88,20 @@ class _HomeScreenState extends State<HomeScreen>
           Center(
             child: ExecutionButton(
               size: 240,
-              onPressStart: _onPressStart,
-              onPressEnd: _onPressEnd,
+              onPressStart: onPressStart,
+              onPressEnd: onPressEnd,
             ),
           ),
 
           // Bottom sheet
-          if (_showBottomSheet)
+          if (showBottomSheet.value)
             GestureDetector(
-              onTap: () => setState(() => _showBottomSheet = false),
+              onTap: () => showBottomSheet.value = false,
               child: Container(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withAlpha((0.6 * 255).toInt()),
               ),
             ),
-          if (_showBottomSheet)
+          if (showBottomSheet.value)
             Align(
               alignment: Alignment.bottomCenter,
               child: _buildBottomSheet(context),
@@ -150,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen>
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withAlpha((0.4 * 255).toInt()),
               borderRadius: BorderRadius.circular(2),
             ),
           ),

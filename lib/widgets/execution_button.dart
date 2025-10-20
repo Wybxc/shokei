@@ -1,9 +1,10 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
 
-class ExecutionButton extends StatefulWidget {
+class ExecutionButton extends HookWidget {
   final double size;
   final VoidCallback? onFinished;
   final VoidCallback onPressStart;
@@ -18,201 +19,194 @@ class ExecutionButton extends StatefulWidget {
   });
 
   @override
-  State<ExecutionButton> createState() => _ExecutionButtonState();
-}
-
-class _ExecutionButtonState extends State<ExecutionButton>
-    with TickerProviderStateMixin {
-  bool _filled = false;
-  late AnimationController _progressController;
-  late AnimationController _scaleController;
-  late Animation<double> _progressAnimation;
-  late Animation<double> _scaleAnimation;
-
-  final AudioPlayer _holdPlayer = AudioPlayer();
-  final AudioPlayer _finishPlayer = AudioPlayer();
-  bool _isHolding = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeAnimations();
-  }
-
-  // Initialize animation controllers
-  void _initializeAnimations() {
-    _progressController = AnimationController(
-      duration: const Duration(milliseconds: 5500),
-      vsync: this,
-    )..addStatusListener(_onProgressStatusChanged);
-
-    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _progressController, curve: Curves.linear),
-    );
-
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
-    );
-  }
-
-  // Progress animation status listener
-  void _onProgressStatusChanged(AnimationStatus status) {
-    debugPrint('Progress animation status: $status');
-    debugPrint(
-        'Current progress value: ${_progressController.value}, isHolding: $_isHolding');
-    if (status == AnimationStatus.completed &&
-        _progressController.value >= 1.0) {
-      _onFillComplete();
-    }
-  }
-
-  @override
-  void dispose() {
-    _progressController.dispose();
-    _scaleController.dispose();
-    _holdPlayer.dispose();
-    _finishPlayer.dispose();
-    super.dispose();
-  }
-
-  Future<void> _onFillComplete() async {
-    setState(() => _filled = true);
-    await _stopFeedback();
-    await _playAudio(_finishPlayer, 'audio/finished.wav');
-    widget.onFinished?.call();
-  }
-
-  // Generic audio playback method with unified error handling
-  Future<void> _playAudio(AudioPlayer player, String assetPath,
-      {ReleaseMode? releaseMode}) async {
-    try {
-      if (releaseMode != null) {
-        await player.setReleaseMode(releaseMode);
-      }
-      await player.play(AssetSource(assetPath));
-    } catch (e) {
-      debugPrint('Error playing audio ($assetPath): $e');
-    }
-  }
-
-  // Generic audio stop method
-  Future<void> _stopAudio(AudioPlayer player) async {
-    try {
-      await player.stop();
-    } catch (e) {
-      debugPrint('Error stopping audio: $e');
-    }
-  }
-
-  // Start vibration feedback
-  Future<void> _startVibration() async {
-    try {
-      final hasVibrator = await Vibration.hasVibrator();
-      if (hasVibrator == true) {
-        // Vibrate with pattern: wait 0ms, vibrate 100ms, repeat
-        await Vibration.vibrate(pattern: [0, 100], repeat: 0);
-      }
-    } catch (e) {
-      debugPrint('Error starting vibration: $e');
-    }
-  }
-
-  // Stop vibration feedback
-  Future<void> _stopVibration() async {
-    try {
-      await Vibration.cancel();
-    } catch (e) {
-      debugPrint('Error stopping vibration: $e');
-    }
-  }
-
-  // Stop all feedback effects (audio + vibration)
-  Future<void> _stopFeedback() async {
-    await Future.wait([
-      _stopAudio(_holdPlayer),
-      _stopVibration(),
-    ]);
-  }
-
-  void _onPanStart() {
-    if (_filled) return;
-
-    widget.onPressStart();
-    _isHolding = true;
-    _scaleController.forward();
-    _startVibration();
-    _playAudio(_holdPlayer, 'audio/processing.wav',
-        releaseMode: ReleaseMode.loop);
-    _progressController.forward();
-  }
-
-  void _onPanStop() {
-    widget.onPressEnd();
-    _isHolding = false;
-    _scaleController.reverse();
-
-    if (!_filled) {
-      _stopFeedback();
-      _resetProgress();
-    }
-  }
-
-  // Reset progress animation
-  void _resetProgress() {
-    final currentProgress = _progressController.value;
-    _progressController.stop();
-    _progressController.animateTo(
-      0.0,
-      duration: Duration(milliseconds: (currentProgress * 1000).toInt()),
-      curve: Curves.linear,
-    );
-  }
-
-  void _onDoubleTap() {
-    if (_filled) {
-      _progressController.stop();
-      _progressController.reset();
-      _stopFeedback();
-      widget.onPressEnd();
-      setState(() => _filled = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final filled = useState(false);
+    final isHolding = useRef(false);
+
+    final progressController = useAnimationController(
+      duration: const Duration(milliseconds: 5500),
+    );
+
+    final scaleController = useAnimationController(
+      duration: const Duration(milliseconds: 150),
+    );
+
+    final progressAnimation = useMemoized(
+      () => Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: progressController, curve: Curves.linear),
+      ),
+      [progressController],
+    );
+
+    final scaleAnimation = useMemoized(
+      () => Tween<double>(begin: 1.0, end: 0.94).animate(
+        CurvedAnimation(parent: scaleController, curve: Curves.easeInOut),
+      ),
+      [scaleController],
+    );
+
+    final holdPlayer = useMemoized(() => AudioPlayer());
+    final finishPlayer = useMemoized(() => AudioPlayer());
+
+    // Dispose audio players
+    useEffect(() {
+      return () {
+        holdPlayer.dispose();
+        finishPlayer.dispose();
+      };
+    }, []);
+
+    // Generic audio playback method with unified error handling
+    Future<void> playAudio(AudioPlayer player, String assetPath,
+        {ReleaseMode? releaseMode}) async {
+      try {
+        if (releaseMode != null) {
+          await player.setReleaseMode(releaseMode);
+        }
+        await player.play(AssetSource(assetPath));
+      } catch (e) {
+        debugPrint('Error playing audio ($assetPath): $e');
+      }
+    }
+
+    // Generic audio stop method
+    Future<void> stopAudio(AudioPlayer player) async {
+      try {
+        await player.stop();
+      } catch (e) {
+        debugPrint('Error stopping audio: $e');
+      }
+    }
+
+    // Start vibration feedback
+    Future<void> startVibration() async {
+      try {
+        final hasVibrator = await Vibration.hasVibrator();
+        if (hasVibrator == true) {
+          // Vibrate with pattern: wait 0ms, vibrate 100ms, repeat
+          await Vibration.vibrate(pattern: [0, 100], repeat: 0);
+        }
+      } catch (e) {
+        debugPrint('Error starting vibration: $e');
+      }
+    }
+
+    // Stop vibration feedback
+    Future<void> stopVibration() async {
+      try {
+        await Vibration.cancel();
+      } catch (e) {
+        debugPrint('Error stopping vibration: $e');
+      }
+    }
+
+    // Stop all feedback effects (audio + vibration)
+    Future<void> stopFeedback() async {
+      await Future.wait([
+        stopAudio(holdPlayer),
+        stopVibration(),
+      ]);
+    }
+
+    Future<void> onFillComplete() async {
+      filled.value = true;
+      await stopFeedback();
+      await playAudio(finishPlayer, 'audio/finished.wav');
+      onFinished?.call();
+    }
+
+    // Progress animation status listener
+    useEffect(() {
+      void listener(AnimationStatus status) {
+        if (status == AnimationStatus.completed &&
+            progressController.value >= 1.0) {
+          onFillComplete();
+        }
+      }
+
+      progressController.addStatusListener(listener);
+      return () => progressController.removeStatusListener(listener);
+    }, [progressController]);
+
+    void onPanStart() {
+      if (filled.value) return;
+
+      onPressStart();
+      isHolding.value = true;
+      scaleController.forward();
+      startVibration();
+      playAudio(holdPlayer, 'audio/processing.wav',
+          releaseMode: ReleaseMode.loop);
+      progressController.forward();
+    }
+
+    void onPanStop() {
+      onPressEnd();
+      isHolding.value = false;
+      scaleController.reverse();
+
+      if (!filled.value) {
+        stopFeedback();
+        // Reset progress animation
+        final currentProgress = progressController.value;
+        progressController.stop();
+        progressController.animateTo(
+          0.0,
+          duration: Duration(milliseconds: (currentProgress * 1000).toInt()),
+          curve: Curves.linear,
+        );
+      }
+    }
+
+    void onDoubleTap() {
+      if (filled.value) {
+        progressController.stop();
+        progressController.reset();
+        stopFeedback();
+        onPressEnd();
+        filled.value = false;
+      }
+    }
+
     return GestureDetector(
-      onPanDown: (details) => _onPanStart(),
-      onPanEnd: (details) => _onPanStop(),
-      onPanCancel: () => _onPanStop(),
-      onDoubleTap: _onDoubleTap,
+      onPanDown: (details) => onPanStart(),
+      onPanEnd: (details) => onPanStop(),
+      onPanCancel: () => onPanStop(),
+      onDoubleTap: onDoubleTap,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_scaleAnimation, _progressAnimation]),
+        animation: Listenable.merge([scaleAnimation, progressAnimation]),
         builder: (context, child) {
           return Transform.scale(
-            scale: _scaleAnimation.value,
+            scale: scaleAnimation.value,
             child: SizedBox(
-              width: widget.size,
-              height: widget.size,
+              width: size,
+              height: size,
               child: CustomPaint(
-                painter: _ShadowPainter(scale: _scaleAnimation.value),
+                painter: _ShadowPainter(scale: scaleAnimation.value),
                 child: Stack(
                   children: [
                     // Background image
                     _buildButtonImage('assets/images/button_bg.png'),
 
                     // Fill animation
-                    _buildFillAnimation(),
+                    ClipOval(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: FractionallySizedBox(
+                          heightFactor: progressAnimation.value,
+                          child: Container(
+                            color: const Color(0xFF953949),
+                          ),
+                        ),
+                      ),
+                    ),
 
                     // Button foreground
                     _buildButtonImage('assets/images/button.png'),
 
                     // Finish overlay
-                    if (_filled) _buildButtonImage('assets/images/finish.png'),
+                    if (filled.value)
+                      _buildButtonImage('assets/images/finish.png'),
                   ],
                 ),
               ),
@@ -232,21 +226,6 @@ class _ExecutionButtonState extends State<ExecutionButton>
       ),
     );
   }
-
-  // Build fill animation
-  Widget _buildFillAnimation() {
-    return ClipOval(
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: FractionallySizedBox(
-          heightFactor: _progressAnimation.value,
-          child: Container(
-            color: const Color(0xFF953949),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _ShadowPainter extends CustomPainter {
@@ -257,7 +236,7 @@ class _ShadowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black.withOpacity(0.78)
+      ..color = Colors.black.withAlpha((0.78 * 255).toInt())
       ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 60.0);
 
     final radius = (size.width / 2) * scale;
