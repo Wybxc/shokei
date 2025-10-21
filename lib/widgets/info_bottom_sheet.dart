@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:vibration/vibration.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import '../generated/app_localizations.dart';
 
 /// Common bottom sheet wrapper that provides consistent styling
 class _BottomSheetWrapper extends StatelessWidget {

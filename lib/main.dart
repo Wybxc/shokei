@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/loading_screen.dart';
 import 'services/resource_preloader.dart';
 import 'providers/audio_preloader_provider.dart';
+import 'generated/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

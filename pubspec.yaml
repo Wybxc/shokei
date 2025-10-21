@@ -11,11 +11,11 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: ^0.19.0
+  intl: ^0.20.2
   audioplayers: ^6.5.1
   vibration: ^3.1.4
   vibration_web: ^1.6.8
-  flutter_hooks: ^0.20.5
+  flutter_hooks: ^0.21.3+1
   url_launcher: ^6.3.1
   package_info_plus: ^9.0.0
   device_info_plus: ^12.2.0
@@ -23,7 +23,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   flutter_launcher_icons: "^0.14.4"
 
 flutter:
@@ -36,6 +36,9 @@ flutter:
 
 flutter_launcher_icons:
   image_path: "assets/images/splash_logo.png"
+  ios: true
+  remove_alpha_ios: true
+  background_color_ios: "#953949"
   web:
     generate: true
     background_color: "#953949"

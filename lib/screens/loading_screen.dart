@@ -15,16 +15,20 @@ class LoadingScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasStarted = useState(false);
+
     useEffect(() {
       // Start preloading when screen mounts
-      preloader.preloadAll(context).then((_) {
-        // Add a small delay before transitioning
-        Future.delayed(const Duration(milliseconds: 500), onComplete);
-      });
+      if (!hasStarted.value) {
+        hasStarted.value = true;
+        // Use addPostFrameCallback to ensure we're not in initState
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          preloader.preloadAll(context).then((_) => onComplete());
+        });
+      }
       return null;
     }, []);
-
-    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.primary,

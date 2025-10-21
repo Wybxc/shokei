@@ -107,21 +107,19 @@ class ResourcePreloader extends ChangeNotifier {
   Future<void> _preloadAudio(String assetPath) async {
     final player = AudioPlayer();
 
-    // Set low volume to avoid audio glitch
-    await player.setVolume(0.0);
+    try {
+      // Set the source to cache it without playing
+      // This prepares the audio player without triggering autoplay restrictions
+      await player.setSource(AssetSource(assetPath));
 
-    // Play the audio file briefly to cache it
-    await player.play(AssetSource(assetPath));
-
-    // Wait a bit for the audio to load
-    await Future.delayed(const Duration(milliseconds: 200));
-
-    // Stop and reset
-    await player.stop();
-    await player.setVolume(1.0);
-
-    // Store the player for reuse
-    _audioPlayers[assetPath] = player;
+      // Store the player for reuse
+      _audioPlayers[assetPath] = player;
+    } catch (e) {
+      // If setSource fails, just create the player
+      // The audio will be loaded on first play
+      _audioPlayers[assetPath] = player;
+      debugPrint('Could not preload audio $assetPath: $e');
+    }
   }
 
   /// Get a preloaded audio player for the given asset path
