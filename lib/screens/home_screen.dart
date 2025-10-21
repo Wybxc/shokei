@@ -54,55 +54,57 @@ class HomeScreen extends HookWidget {
       );
     }
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/background.jpg',
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          // Info button
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 20,
-            left: 20,
-            child: AnimatedOpacity(
-              opacity: infoButtonOpacity.value,
-              duration: infoButtonOpacity.value == 0.0
-                  ? const Duration(milliseconds: 100)
-                  : const Duration(milliseconds: 200),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: showAboutBottomSheet,
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    child: const Icon(
-                      Icons.info_outline,
-                      // color: Color(0xFF252525),
-                      size: 32,
+    return Stack(children: [
+      // Background image
+      Positioned.fill(
+        child: Image.asset(
+          'assets/images/background.jpg',
+          fit: BoxFit.cover,
+        ),
+      ),
+      Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // Info button
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 20,
+              left: 20,
+              child: AnimatedOpacity(
+                opacity: infoButtonOpacity.value,
+                duration: infoButtonOpacity.value == 0.0
+                    ? const Duration(milliseconds: 100)
+                    : const Duration(milliseconds: 200),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: showAboutBottomSheet,
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(
+                        Icons.info_outline,
+                        // color: Color(0xFF252525),
+                        size: 32,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          // Execution button
-          Center(
-            child: ExecutionButton(
-              size: 240,
-              onPressStart: onPressStart,
-              onPressEnd: onPressEnd,
+            // Execution button
+            Center(
+              child: ExecutionButton(
+                size: 240,
+                onPressStart: onPressStart,
+                onPressEnd: onPressEnd,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      )
+    ]);
   }
 
   Widget _buildBottomSheet(BuildContext context) {
