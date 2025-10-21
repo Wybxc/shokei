@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
+import '../providers/audio_preloader_provider.dart';
 
 class ExecutionButton extends HookWidget {
   final double size;
@@ -29,8 +30,14 @@ class ExecutionButton extends HookWidget {
       duration: const Duration(milliseconds: 5500),
     );
 
-    final holdPlayer = useMemoized(() => AudioPlayer());
-    final finishPlayer = useMemoized(() => AudioPlayer());
+    // Get the resource preloader from context
+    final preloader = ResourcePreloaderProvider.of(context);
+
+    // Create independent audio players for this button instance
+    final holdPlayer =
+        useMemoized(() => preloader.createAudioPlayer('audio/processing.wav'));
+    final finishPlayer =
+        useMemoized(() => preloader.createAudioPlayer('audio/finished.wav'));
 
     // Dispose audio players
     useEffect(() {
