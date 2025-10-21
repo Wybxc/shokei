@@ -11,6 +11,9 @@ class ExecutionButton extends HookWidget {
   final VoidCallback onPressStart;
   final VoidCallback onPressEnd;
 
+  static const fillMillisecs = 5500;
+  Duration get fillDuration => const Duration(milliseconds: fillMillisecs);
+
   const ExecutionButton({
     super.key,
     this.size = 240,
@@ -26,9 +29,7 @@ class ExecutionButton extends HookWidget {
     final progress = useState(0.0);
     final scale = useState(1.0);
 
-    final progressController = useAnimationController(
-      duration: const Duration(milliseconds: 5500),
-    );
+    final progressController = useAnimationController(duration: fillDuration);
 
     // Get the resource preloader from context
     final preloader = ResourcePreloaderProvider.of(context);
@@ -84,8 +85,9 @@ class ExecutionButton extends HookWidget {
       try {
         final hasVibrator = await Vibration.hasVibrator();
         if (hasVibrator == true) {
-          // Vibrate with pattern: wait 0ms, vibrate 100ms, repeat
-          await Vibration.vibrate(pattern: [0, 100], repeat: 0);
+          final intensities = List<int>.generate(128, (i) => i + 1);
+          final pattern = List<int>.generate(128, (_) => fillMillisecs ~/ 128);
+          await Vibration.vibrate(pattern: pattern, intensities: intensities);
         }
       } catch (e) {
         debugPrint('Error starting vibration: $e');
