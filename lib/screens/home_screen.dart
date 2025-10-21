@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/execution_button.dart';
+import '../widgets/info_bottom_sheet.dart';
 
 class HomeScreen extends HookWidget {
   const HomeScreen({super.key});
@@ -44,13 +42,23 @@ class HomeScreen extends HookWidget {
       infoButtonOpacity.value = 1.0;
     }
 
-    void showAboutBottomSheet() {
+    void showAboutInfo() {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
         showDragHandle: true,
-        builder: (context) => _buildBottomSheet(context),
+        builder: (context) => const AboutBottomSheet(),
+      );
+    }
+
+    void showDebugInfo() {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        builder: (context) => const DebugInfoBottomSheet(),
       );
     }
 
@@ -78,7 +86,8 @@ class HomeScreen extends HookWidget {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: showAboutBottomSheet,
+                    onTap: showAboutInfo,
+                    onLongPress: showDebugInfo,
                     customBorder: const CircleBorder(),
                     child: Container(
                       padding: const EdgeInsets.all(8),
@@ -105,88 +114,5 @@ class HomeScreen extends HookWidget {
         ),
       )
     ]);
-  }
-
-  Widget _buildBottomSheet(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    const whiteText = TextStyle(color: Colors.white);
-    const whiteTextBold =
-        TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Logo
-          Image.asset('assets/images/logo.png', height: 100),
-          const SizedBox(height: 16),
-
-          // Title
-          Text(
-            l10n.aboutTitle,
-            style: whiteTextBold.copyWith(fontSize: 12),
-          ),
-          const SizedBox(height: 16),
-
-          // Description
-          Text(
-            l10n.aboutDescription,
-            style: whiteText.copyWith(fontSize: 10, height: 1.6),
-            textAlign: TextAlign.center,
-          ),
-          if (l10n.aboutDescription != l10n.aboutDescriptionJa)
-            const SizedBox(height: 8),
-          if (l10n.aboutDescription != l10n.aboutDescriptionJa)
-            Text(
-              l10n.aboutDescriptionJa,
-              style: whiteText.copyWith(fontSize: 10, height: 1.6),
-              textAlign: TextAlign.center,
-            ),
-
-          // Divider
-          const Divider(color: Colors.white30, height: 32),
-
-          // App info
-          FutureBuilder<PackageInfo>(
-            future: PackageInfo.fromPlatform(),
-            builder: (context, snapshot) {
-              final version = snapshot.hasData ? snapshot.data!.version : '...';
-              return Text(
-                '${l10n.appName}\n${l10n.versionLabel} $version\n${l10n.developerInfo}',
-                style: whiteText.copyWith(
-                    fontSize: 9, height: 1.5, color: Colors.white70),
-                textAlign: TextAlign.center,
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Social links
-          RichText(
-            text: TextSpan(
-              style: const TextStyle(fontSize: 10, color: Colors.white30),
-              children: [
-                TextSpan(
-                  text: l10n.githubLabel,
-                  recognizer: TapGestureRecognizer()
-                    ..onTap =
-                        () => launchUrl(Uri.parse('https://github.com/Wybxc')),
-                ),
-                const TextSpan(text: '  ｜  '),
-                TextSpan(
-                  text: l10n.bilibiliLabel,
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () => launchUrl(
-                          Uri.parse('https://space.bilibili.com/85438718'),
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
