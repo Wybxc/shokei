@@ -255,6 +255,7 @@ class _DebugInfoContent extends HookWidget {
         }
         info['Language'] = webInfo.language ?? 'Unknown';
         info['Platform Type'] = webInfo.platform ?? 'Unknown';
+        info['WASM'] = kIsWasm ? 'Yes' : 'No';
       } else {
         switch (defaultTargetPlatform) {
           case TargetPlatform.android:
@@ -348,7 +349,11 @@ class _DebugInfoContent extends HookWidget {
 
     // Locale info
     if (locale != null) {
-      info['Locale'] = '${locale.languageCode}_${locale.countryCode ?? ""}';
+      var localeString = locale.languageCode;
+      if (locale.countryCode != null && locale.countryCode!.isNotEmpty) {
+        localeString += '_${locale.countryCode}';
+      }
+      info['Locale'] = localeString;
     }
 
     // Accessibility
